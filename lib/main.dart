@@ -17,14 +17,28 @@ import 'package:comp_vis_project/pages/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // untuk cek login google
 import 'package:comp_vis_project/model_data.dart';
 import 'package:comp_vis_project/pages/halaman_warta.dart';
-import 'package:flutter_inset_box_shadow/flutter_inset_box_shadow.dart';
+import 'package:flutter_inset_box_shadow/flutter_inset_box_shadow.dart' hide BoxDecoration;
 import 'package:comp_vis_project/feature/custom_card_button.dart';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:comp_vis_project/pages/login_page.dart'; 
+// import 'package:comp_vis_project/pages/SplashPage.dart';
+
 
 // UserProfile? currentUser;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://unvcefrmwksutzrdzaux.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudmNlZnJtd2tzdXR6cmR6YXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NzQ5MDAsImV4cCI6MjA3NDM1MDkwMH0.TYspOUSMTr-gPQJ_JnOo_MPrrrZmQDlZ1ZGvLmpKBUA',
+  );
+
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

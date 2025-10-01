@@ -3,6 +3,7 @@ import 'package:comp_vis_project/model_data.dart';
 import 'package:comp_vis_project/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GoogleLoginPage extends StatefulWidget {
   const GoogleLoginPage({super.key});
@@ -15,43 +16,41 @@ class GoogleLoginPage extends StatefulWidget {
 // class _GoogleLoginPageState extends State<GoogleLoginPage> {
 //   GoogleSignInAccount? _user;
 class _GoogleLoginPageState extends State<GoogleLoginPage> {
-  UserProfile? _user;
+  @override
+  void initState() {
+    super.initState();
+    // Listener ini penting untuk mendeteksi kapan pengguna berhasil login
+    // dan kembali dari browser ke aplikasi.
+    supabase.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        // Jika login berhasil, langsung pindah ke halaman utama
+        // dan hapus semua halaman sebelumnya (agar tidak bisa back ke login page)
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()), 
+          (route) => false,
+        );
+      }
+    });
+  }
 
-  // Instance Google SignIn
-  // final GoogleSignIn _googleSignIn = GoogleSignIn();
-
-  Future<void> _handleSignIn() async {
+  Future<void> _signInWithGoogle() async {
     try {
-      // KOMEN INI JANGAN DIHAPUS
-      // final account = await _googleSignIn.signIn(); 
-      setState(() {
-        // _user = account;
-        _user = dummyUser; //JANGAN LUPA UBAH dummyUser menjadi acoount
-      });
-      currentUser = _user;
-
-      // BAGIAN KOMEN INI JAGAN DIHAPUS BUAT KARENA AKAN KEPAKE
-      // if (account != null) {
-      //   // TODO: Simpan ke database backend (email, displayName, photoUrl)
-      //   print("Login berhasil: ${account.displayName}, ${account.email}");
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(content: Text("Login sebagai ${account.displayName}")),
-      //   );
-      // }
-
-      // Setelah login, balik ke MainPage (bukan langsung ProfilePage)
-      // Navigator.pushReplacementNamed(context, "/main");
-      Navigator.pushAndRemoveUntil(
-        context, 
-        MaterialPageRoute(builder: (_) => const MainScreen()), 
-        (route) => false
+      // Panggil metode login OAuth dari Supabase
+      await supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        // URL ini HARUS SAMA PERSIS dengan yang Anda atur di AndroidManifest.xml
+        redirectTo: 'io.supabase.flutterquickstart://login-callback',
       );
-      
     } catch (error) {
+      // Jika ada error, tampilkan pesan
       print("Error login Google: $error");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login gagal")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login gagal, coba lagi.")),
+        );
+      }
     }
   }
 
@@ -63,7 +62,7 @@ class _GoogleLoginPageState extends State<GoogleLoginPage> {
         child: ElevatedButton.icon(
           icon: const Icon(Icons.login),
           label: const Text("Login dengan Google"),
-          onPressed: _handleSignIn,
+          onPressed: _signInWithGoogle,
         )
       ),
     );

@@ -39,7 +39,7 @@ class CustomCardButton2 extends StatelessWidget{
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
       child: Container(
-        width: (width ?? 18).toDouble(),
+        width: (width ?? MediaQuery.of(context).size.width).toDouble(),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(50),
           color: bgColor ?? const Color(0xFFFFFFFF),

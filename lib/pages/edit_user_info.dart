@@ -1,3 +1,4 @@
+import 'package:comp_vis_project/feature/custom_card_button_2.dart';
 import 'package:flutter/material.dart';
 import 'package:comp_vis_project/model_data.dart';
 
@@ -85,15 +86,27 @@ class _EditUserInfoPageState extends State<EditUserInfo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton(
-                  onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                  child: const Text("Simpan Perubahan"),
+                CustomCardButton2(
+                  width: 150,
+                  title: const Text('Simpan'), 
+                  shadowTitle: true, 
+                  shadowSubtitle: false,
+                  icon: Icons.check_circle_rounded,
+                  // iconColor: Colors.white,
+                  // textColor: Colors.white,
+                  bgColor: Colors.teal,
+                  onTap: _saveChanges,
                 ),
-                ElevatedButton(
-                  onPressed: _cancelChanges,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                  child: const Text("Batalkan"),
+                CustomCardButton2(
+                  width: 150,
+                  title: const Text('Batalkan'), 
+                  shadowTitle: true, 
+                  shadowSubtitle: false,
+                  icon: Icons.cancel_rounded,
+                  // iconColor: Colors.black,
+                  // textColor: Colors.black,
+                  bgColor: Colors.redAccent,
+                  onTap: _saveChanges,
                 ),
               ],
             ),

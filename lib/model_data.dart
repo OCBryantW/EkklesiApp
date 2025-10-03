@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:comp_vis_project/main.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class AppIcons {
@@ -86,42 +88,19 @@ final List<Sermon> dummySermons = [
   ),
 ];
 
-class UserProfile {
-  String fullName;
-  int age;
-  String address;
-  String email;
-  String phone;
-  int exp;
-  int streak;
-  String personalToken;
-  int counter;
 
-  UserProfile({
-    required this.fullName,
-    required this.age,
-    required this.address,
-    required this.email,
-    required this.phone,
-    this.exp = 0,
-    this.streak = 0,
-    required this.personalToken,
-    this.counter = 0,
-  });
-}
 
 // BAGIAN INI DATA DUMMY USER
-final UserProfile dummyUser = UserProfile(
-  fullName: "Budi Setiawan",
-  age: 25,
-  address: "Jl. Mawar No. 123",
-  email: "budi.setiawan@email.com",
-  phone: "081234567890",
-  exp: 0,
-  streak: 0,
-  personalToken: "userTokenABC",
-  counter: 0,
-);
+// final UserProfile dummyUser = UserProfile(
+//   fullName: "Budi Setiawan",
+//   age: 25,
+//   address: "Jl. Mawar No. 123",
+//   email: "budi.setiawan@email.com",
+//   phone: "081234567890",
+//   exp: 0,
+//   streak: 0,
+//   personalToken: "userTokenABC",
+//   counter: 0,
+// );
 
 // Flag user login (null kalau belum login). BAGIAN INI UNTUK TES USER SDH LOGIN ATAU BLM
-UserProfile? currentUser = null;

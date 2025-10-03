@@ -1,116 +1,105 @@
 import 'package:comp_vis_project/feature/custom_card_button_3.dart';
-import 'package:comp_vis_project/main.dart'; // Untuk akses 'supabase'
+import 'package:comp_vis_project/services/firebase_services.dart'; // Untuk akses 'supabase'
 import 'package:comp_vis_project/pages/login_page.dart';
 import 'package:comp_vis_project/pages/user_info.dart';
 import 'package:comp_vis_project/styles/customBtnStyle.dart';
 import 'package:flutter/material.dart' hide BoxDecoration, BoxShadow;
+// import 'package:comp_vis_project/model_data.dart';
 import 'package:flutter_inset_box_shadow/flutter_inset_box_shadow.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
   // Fungsi untuk mengambil data profil dari tabel 'profiles' di Supabase
-  Future<Map<String, dynamic>> _fetchUserProfile() async {
-    final user = supabase.auth.currentUser;
+  // Future<Map<String, dynamic>> _fetchUserProfile() async {
+  //   final user = supabase.auth.currentUser;
+  //   if (user == null) {
+  //     throw 'Anda belum login';
+  //   }
+
+  //   final response =
+  //       await supabase.from('profiles').select().eq('id', user.id).single();
+
+  //   return response;
+  // }
+
+  // // Fungsi logout yang benar menggunakan Supabase
+  // Future<void> _handleSignOut() async {
+  //   try {
+  //     await supabase.auth.signOut();
+  //   } catch (e) {
+  //     print('Error signing out: $e');
+  //   }
+
+  //   if (mounted) {
+  //     Navigator.of(context).pushAndRemoveUntil(
+  //       MaterialPageRoute(builder: (context) => const GoogleLoginPage()),
+  //       (route) => false,
+  //     );
+  //   }
+  // }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider); // ambil user dari provider
+    final auth = ref.watch(authProvider.notifier);
+
     if (user == null) {
-      throw 'Anda belum login';
-    }
-
-    final response =
-        await supabase.from('profiles').select().eq('id', user.id).single();
-
-    return response;
-  }
-
-  // Fungsi logout yang benar menggunakan Supabase
-  Future<void> _handleSignOut() async {
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      print('Error signing out: $e');
-    }
-
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const GoogleLoginPage()),
-        (route) => false,
+      return const Scaffold(
+        body: Center(child: Text("Anda belum login akun Google"),),
       );
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Saya'),
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _fetchUserProfile(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (snapshot.hasData) {
-            final userProfile = snapshot.data!;
-
-            return Padding(
+      body: 
+            Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  _buildProfileHeader(userProfile),
+                  _buildProfileHeader(user),
                   const SizedBox(height: 24),
-                  _buildStatsCard(userProfile),
+                  _buildStatsCard(user),
                   const SizedBox(height: 24),
-                  _buildMenuList(context),
+                  _buildMenuList(context, auth),
                 ],
               ),
-            );
-          }
-          return const Center(child: Text('Tidak ada data'));
-        },
-      ),
+            ),
     );
   }
 
-  Widget _buildProfileHeader(Map<String, dynamic> profile) {
-    final avatarUrl = profile['avatar_url'];
+  Widget _buildProfileHeader(user) {
 
     return Column(
       children: [
         CircleAvatar(
           radius: 50,
           backgroundColor: Colors.grey.shade300,
-          backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-          child: avatarUrl == null
-              ? const Icon(Icons.person, size: 60, color: Colors.white)
-              : null,
+          // backgroundImage: user.photoUrl! != null ? NetworkImage(avatarUrl) : null,
+          child: const Icon(Icons.person, size: 60, color: Colors.white)
         ),
         const SizedBox(height: 12),
         Text(
-          profile['full_name'] ?? 'Nama Tidak Ada',
+          user.fullName,
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         Text(
-          profile['email'] ?? 'Email Tidak Ada',
+          user.email,
           style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
       ],
     );
   }
 
-  Widget _buildStatsCard(Map<String, dynamic> profile) {
+  Widget _buildStatsCard(user) {
     // Pastikan Anda punya kolom 'exp' dan 'streak' di tabel 'profiles'
     // Jika tidak ada, nilainya akan menjadi 0
-    final exp = profile['exp'] ?? 0;
-    final streak = profile['streak'] ?? 0;
+    final exp = user.exp ?? 0;
+    final streak = user.streak ?? 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 10),
@@ -177,7 +166,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMenuList(BuildContext context) {
+  Widget _buildMenuList(BuildContext context, AuthNotifier auth) {
+
     return Column(
       children: [
         Card(
@@ -198,7 +188,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     MaterialPageRoute(
                         builder: (context) => const UserInfo()),
                   );
-                  setState(() {});
                 },
               ),
             )),
@@ -228,7 +217,13 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text('Keluar'),
-                onTap: _handleSignOut, // Menggunakan fungsi logout yang baru
+                onTap: () async {
+                  await auth.logout();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()), 
+                    (route) => false,
+                  );
+                }, // Menggunakan fungsi logout yang baru
               ),
             )),
       ],

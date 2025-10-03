@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comp_vis_project/feature/custom_card_button_2.dart';
+import 'package:comp_vis_project/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:comp_vis_project/model_data.dart';
 
 class EditUserInfo extends StatefulWidget{
-  final UserProfile user;
+  final UserModel user;
 
   const EditUserInfo({super.key, required this.user});
 
@@ -26,26 +28,20 @@ class _EditUserInfoPageState extends State<EditUserInfo> {
     phoneController = TextEditingController(text: widget.user.phone);
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
     // NANTI SAAT MENGGUNAKAN FIREBASE, setState DIKOMEN AJA GANTI 
     // SAMA KOMEN YANG DIBAWAHNYA
     setState(() {
-      dummyUser.fullName = nameController.text;
-      dummyUser.age = int.tryParse(ageController.text) ?? widget.user.age;
-      dummyUser.address = addressController.text;
-      dummyUser.phone = phoneController.text;
+      widget.user.fullName = nameController.text;
+      widget.user.age = int.tryParse(ageController.text) ?? widget.user.age;
+      widget.user.address = addressController.text;
+      widget.user.phone = phoneController.text;
     });
 
-    // TODO: Update ke Firebase
-    // FirebaseFirestore.instance.collection("users").doc(widget.user.email).update({
-    //   "fullName": dummyUser.fullName,
-    //   "age": dummyUser.age,
-    //   "address": dummyUser.address,
-    //   "phone": dummyUser.phone,
-    // });
+    await FirebaseFirestore.instance.collection("users").doc(widget.user.uid).update(widget.user.toMap());
 
     Navigator.pop(context); // keluar dari EditUserInfoPage
-    Navigator.pop(context); // keluar dari UserInfoPage
+    // Navigator.pop(context); // keluar dari UserInfoPage
   }
 
   void _cancelChanges() {
@@ -106,7 +102,7 @@ class _EditUserInfoPageState extends State<EditUserInfo> {
                   // iconColor: Colors.black,
                   // textColor: Colors.black,
                   bgColor: Colors.redAccent,
-                  onTap: _saveChanges,
+                  onTap: _cancelChanges,
                 ),
               ],
             ),

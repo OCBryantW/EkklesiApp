@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comp_vis_project/model_data.dart';
+import 'package:comp_vis_project/providers/user_provider.dart';
+import 'package:comp_vis_project/services/admin_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-// KOMEN INI JANGAN DIHAPUS
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comp_vis_project/services/firebase_services.dart';
+
 
 class QrScanner extends StatefulWidget {
   @override
@@ -30,13 +33,13 @@ class _ScannerPageState extends State<QrScanner>{
 
   // --- validasi ke Firebase (nanti bisa dipakai) ---
   Future<bool> _isValidTokenFromFirebase(String token) async {
-    // final snapshot = await FirebaseFirestore.instance
-    //     .collection("users")
-    //     .where("token", isEqualTo: token)
-    //     .get();
-    // return snapshot.docs.isNotEmpty;
-
-    return false; // sementara return false dulu
+    try {
+      final doc = await FirebaseFirestore.instance.collection("users").doc(token).get();
+      return doc.exists;
+    } catch (e) {
+      print("Error cek token Firebase: $e");
+      return false;
+    } // sementara return false dulu
   }
 
   Future <bool> _isValidToken(String token) async{
@@ -44,9 +47,7 @@ class _ScannerPageState extends State<QrScanner>{
     if (validTokens.contains(token)) return true;
 
     // kalau sudah pakai Firebase tinggal aktifkan
-    // return await _isValidTokenFromFirebase(token);
-
-    return false;
+    return await _isValidTokenFromFirebase(token);
   }
 
   void _handleScan(String token) async{
@@ -63,37 +64,34 @@ class _ScannerPageState extends State<QrScanner>{
       duplicateCount = 0;
       holdTimer?.cancel(); // hentikan timer lama
 
-      if(scannedTokens.contains(uniqueKey)){
-        _showSnackBar("Jemaat Sudah Terabsen", Colors.orange);
-      } else {
+      if(!scannedTokens.contains(uniqueKey)){
         scannedTokens.add(uniqueKey);
 
         // KOMEN INI JANGAN DIHAPUS
         // --- UPDATE FIREBASE DI SINI ---
-        // try {
-        //   await FirebaseFirestore.instance
-        //       .collection("users")
-        //       .doc(token) // anggap token = documentId
-        //       .update({
-        //     "counter": FieldValue.increment(1),
-        //     "streak": FieldValue.increment(1),
-        //     "exp": FieldValue.increment(10),
-        //     "lastEvent": currentEvent,
-        //   });
-
-        //   _showSnackBar("Jemaat Berhasil Terabsen", Colors.green);
-        // } catch (e) {
-        //   _showSnackBar("Gagal update Firebase: $e", Colors.red);
-        // }
-        // -------------------------------
-
-        _showSnackBar("Jemaat Berhasil Terabsen", Colors.green);
-
-        if(currentUser != null){
-          setState(() {
-            currentUser!.counter += 1;
+        try {
+          await FirebaseFirestore.instance
+              .collection("users")
+              .doc(token) // anggap token = documentId
+              .update({
+            "streak": FieldValue.increment(1),
+            "exp": FieldValue.increment(10),
+            "lastEvent": currentEvent,
           });
+
+          _showSnackBar("Jemaat Berhasil Terabsen", Colors.green);
+
+          // bool isAdmin = await AdminServices.isAdmin(token);
+          // if(isAdmin){
+          //   await AdminServices.incrementAdminCounter(token);
+          // }
+
+        } catch (e) {
+          _showSnackBar("Gagal update Firebase: $e", Colors.red);
         }
+        
+      } else {
+        _showSnackBar("Jemaat Sudah Terabsen", Colors.orange);
       }
 
       holdTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer){
@@ -106,9 +104,8 @@ class _ScannerPageState extends State<QrScanner>{
           }
         }
       });
-
-    } else {
-
+      lastToken = token;
+      duplicateCount = 0;
     }
   }
 

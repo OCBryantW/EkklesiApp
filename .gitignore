@@ -50,6 +50,7 @@ venv/
 .pub/
 build/
 migrate_working_dir/
+**/firebase_options.dart
 
 # Symbolication & Obfuscation
 app.*.symbols

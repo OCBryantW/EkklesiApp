@@ -1,30 +1,15 @@
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comp_vis_project/model_data.dart';
+import 'package:comp_vis_project/providers/user_provider.dart';
+import 'package:comp_vis_project/services/firebase_services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
-class PersonalAbsenCode extends StatefulWidget {
+class PersonalAbsenCode extends ConsumerWidget {
   const PersonalAbsenCode({super.key});
 
-  @override
-  State<PersonalAbsenCode> createState() => _PersonalAbsenCodeState();
-}
-
-class _PersonalAbsenCodeState extends State<PersonalAbsenCode> {
-  void _incrementCounter(UserProfile user) {
-    setState(() {
-      user.streak += 1;
-      user.exp += 10;
-    });
-    // TODO: Simpan ke Firebase
-    /*
-    FirebaseFirestore.instance.collection("users").doc(currentUser.personalToken).update({
-      "counter": FieldValue.increment(1)
-    });
-    */
-  }
-
-  void _showSnackBar(String message, Color color) {
+  void _showSnackBar(BuildContext context, String message, Color color) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -45,8 +30,8 @@ class _PersonalAbsenCodeState extends State<PersonalAbsenCode> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final user = currentUser ?? dummyUser;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(userDataProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,28 +41,11 @@ class _PersonalAbsenCodeState extends State<PersonalAbsenCode> {
           icon: const Icon(Icons.arrow_back),
         ),
       ),
-      /* body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        // KOMEN INI JANGAN DIHAPUS
-        stream: FirebaseFirestore.instance
-            .collection("users")
-            .doc(user.personalToken) // token jadi ID jemaat
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+      body: userAsync.when(
+        data: (user) {
+          if(user == null){
+            return const Center(child: Text("Anda belum login akun Google"),);
           }
-
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final streak = data["streak"] ?? 0;
-          final exp = data["exp"] ?? 0;
-          final attended = data["lastEvent"] == "2025-09-13/07.00";
-
-          if (attended) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showSnackBar("Anda Berhasil Terabsen", Colors.green);
-            });
-          }
-
           return Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 150),
@@ -94,13 +62,13 @@ class _PersonalAbsenCodeState extends State<PersonalAbsenCode> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text("Streak: $streak, Exp: $exp"),
+                  Text("Streak: ${user.streak}, Exp: ${user.exp}"),
                   const SizedBox(height: 28),
                   SizedBox(
                     width: 250,
                     height: 250,
                     child: PrettyQrView.data(
-                      data: user.personalToken,
+                      data: user.uid,
                       decoration: const PrettyQrDecoration(
                         shape: PrettyQrSmoothSymbol(),
                       ),
@@ -111,8 +79,11 @@ class _PersonalAbsenCodeState extends State<PersonalAbsenCode> {
               ),
             ),
           );
+
         },
-      ),*/
+        loading: () => const Center(child: CircularProgressIndicator(),),
+        error: (e, _) => Center(child: Text("Error: $e"),)
+      )
     );
   }
 }

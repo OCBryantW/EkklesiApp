@@ -50,7 +50,6 @@ venv/
 .pub/
 build/
 migrate_working_dir/
-**/firebase_options.dart
 
 # Symbolication & Obfuscation
 app.*.symbols
@@ -139,3 +138,10 @@ coverage/
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
+
+# ========================================
+# Exeptions to sensitive files
+# ========================================
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+**/firebase_options.dart
